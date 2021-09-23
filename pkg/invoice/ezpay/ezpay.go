@@ -32,7 +32,7 @@ func PKCS7Padding(b []byte, blocksize int) ([]byte, error) {
 	if blocksize <= 0 {
 		return nil, errors.New("invalid blocksize")
 	}
-	if b == nil || len(b) == 0 {
+	if len(b) == 0 {
 		return nil, errors.New("invalid PKCS7 data (empty or not padded)")
 	}
 	n := blocksize - (len(b) % blocksize)
@@ -97,9 +97,9 @@ func (c *InvoiceClient) Create() (resp map[string]interface{}, err error) {
 
 func get(target map[string]interface{}, key string, defaultValue interface{}) (result interface{}) {
 	if value, ok := target[key]; ok {
-		switch value.(type) {
+		switch value := value.(type) {
 		case string:
-			if value.(string) != "" {
+			if value != "" {
 				return value
 			}
 		}
@@ -127,7 +127,7 @@ func interfaceSliceItoa(i []interface{}) (result []string) {
 // Validate check the data for InvoiceClient, fix missing fields
 func (c *InvoiceClient) Validate() (err error) {
 
-	var result = make(map[string]interface{}, 0)
+	var result = map[string]interface{}{}
 
 	result["RespondType"] = get(c.Payload, "response_type", "JSON")
 	result["TimeStamp"] = time.Now().Unix()
@@ -215,9 +215,10 @@ func (c *InvoiceClient) Validate() (err error) {
 				fallthrough
 			case "1":
 				var checkString string
-				if result["CarrierType"] == "0" {
+				switch result["CarrierType"] {
+				case "0":
 					checkString = "^/[A-Z0-9+-.]{7}$"
-				} else if result["CarrierType"] == "1" {
+				case "1":
 					checkString = "^/[A-Z0-9+-.]{7}$"
 				}
 				if match, _ := regexp.MatchString(checkString, result["CarrierNum"].(string)); !match {
