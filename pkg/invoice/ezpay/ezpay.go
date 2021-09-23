@@ -271,7 +271,7 @@ func (c *InvoiceClient) Validate() (err error) {
 		return r
 	}(result["ItemAmt"].([]int)), "|")
 
-	// Trim comment messeage to allowed length
+	// Trim comment messuage to allowed length
 	if comment, ok := result["Comment"].(string); ok && len(comment) > DefaultCommentLength {
 		result["Comment"] = func(s string, l int) string {
 			result := []rune(s)
