@@ -9,7 +9,6 @@ type Provider interface {
 }
 
 // NewEzPayInvoiceProvider returns a provider from ezPay
-
 func NewEzPayInvoiceProvider(config ezpay.Config, data map[string]interface{}) (p Provider, err error) {
 	return &ezpay.InvoiceClient{Payload: data, Config: config}, nil
 }

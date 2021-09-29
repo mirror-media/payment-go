@@ -1,9 +1,9 @@
 package ezpay
 
 type Config struct {
-	MerchantID string `json:"merchant_id"`
-	URL        string `json:"url"`
-	APIVersion string `json:"api_version"`
-	Key        string `json:"key"`
-	IV         string `json:"iv"`
+	MerchantID string `mapstructure:"merchantId"`
+	URL        string `mapstructure:"url"`
+	APIVersion string `mapstructure:"apiVersion"`
+	Key        string `mapstructure:"key"`
+	IV         string `mapstructure:"iv"`
 }
