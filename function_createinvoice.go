@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	formatter "github.com/bcgodev/logrus-formatter-gke"
 	"github.com/mirror-media/payment-go/pkg/gcpsecret"
@@ -80,25 +81,24 @@ func CreateInvoice(w http.ResponseWriter, r *http.Request) {
 		logrus.Error(err)
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
-
 	}
 
 	provider, _ := invoice.NewEzPayInvoiceProvider(config, payload)
 
 	resp, err := provider.Create()
 	if err != nil {
+		if !strings.HasPrefix(err.Error(), "httpCode:") {
+			err = errors.Wrap(err, "invoice creation error")
+			logrus.Error(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		err = errors.Wrap(err, "invoice creation error")
 		logrus.Error(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(resp)
-	if err != nil {
-		logrus.Errorf("json encode resp(%+v) error:%+v", resp, err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	if json.Valid(resp) {
+		w.Header().Set("Content-Type", "application/json")
 	}
+	fmt.Fprint(w, string(resp))
 }

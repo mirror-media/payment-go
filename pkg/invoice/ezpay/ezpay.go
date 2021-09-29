@@ -5,7 +5,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -43,7 +42,7 @@ func PKCS7Padding(b []byte, blocksize int) ([]byte, error) {
 }
 
 // Create makes an invoice API call to ezpay
-func (c *InvoiceClient) Create() (resp map[string]interface{}, err error) {
+func (c *InvoiceClient) Create() (resp []byte, err error) {
 
 	dataURL := url.Values{}
 	for k, v := range c.Payload {
@@ -84,15 +83,12 @@ func (c *InvoiceClient) Create() (resp map[string]interface{}, err error) {
 	defer r.Body.Close()
 	// Parse response
 	respBody, _ := ioutil.ReadAll(r.Body)
-	err = json.Unmarshal(respBody, &resp)
-	if err != nil {
-		return nil, fmt.Errorf("parsing response from ezPay error:%s", err.Error())
+
+	if r.StatusCode != http.StatusOK {
+		err = fmt.Errorf("httpCode:%d", r.StatusCode)
 	}
 
-	if status, ok := resp["Status"]; ok && status != "SUCCESS" {
-		return nil, fmt.Errorf("create invoice error:%s", resp["Message"])
-	}
-	return resp, nil
+	return respBody, err
 }
 
 func get(target map[string]interface{}, key string, defaultValue interface{}) (result interface{}) {

@@ -4,7 +4,7 @@ import "github.com/mirror-media/payment-go/pkg/invoice/ezpay"
 
 // Provider is the interface each invoice service has to implement
 type Provider interface {
-	Create() (resp map[string]interface{}, err error)
+	Create() (resp []byte, err error)
 	Validate() error
 }
 
