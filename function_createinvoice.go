@@ -3,6 +3,7 @@ package payment
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -48,11 +49,38 @@ func CreateInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload map[string]interface{}
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		err = errors.Wrap(err, "decoding payload error")
+
+	switch contentType := r.Header.Get("Content-Type"); contentType {
+	case "application/json":
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			err = errors.Wrap(err, "decoding payload error")
+			logrus.Error(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	default:
+		err := fmt.Errorf("content type(%s) is not acceptable", contentType)
 		logrus.Error(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	switch method := r.Method; method {
+	case http.MethodOptions:
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Max-Age", "3600")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	case http.MethodPost:
+		// w.Header().Set("Access-Control-Allow-Origin", "*")
+	default:
+		err := fmt.Errorf("method %s is forbidden", method)
+		logrus.Error(err)
+		http.Error(w, err.Error(), http.StatusForbidden)
+		return
+
 	}
 
 	provider, _ := invoice.NewEzPayInvoiceProvider(config, payload)
